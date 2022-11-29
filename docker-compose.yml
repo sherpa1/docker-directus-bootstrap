@@ -1,0 +1,42 @@
+version: '3.9'
+services:
+  database:
+    container_name: drcts_database
+    image: postgis/postgis:13-master
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    networks:
+      - drcts
+    env_file:
+      - ./db/.env
+
+  cache:
+    container_name: drcts_cache
+    image: redis:6
+    networks:
+      - drcts
+
+  directus:
+    container_name: drcts_directus
+    image: directus/directus:latest
+    ports:
+      - 8055:8055
+    volumes:
+      # By default, uploads are stored in /directus/uploads
+      # Always make sure your volumes matches the storage root when using
+      # local driver
+      - ./data/directus/uploads:/directus/uploads
+      # Make sure to also mount the volume when using SQLite
+      # - ./database:/directus/database
+      # If you want to load extensions from the host
+      # - ./extensions:/directus/extensions
+    networks:
+      - drcts
+    depends_on:
+      - cache
+      - database
+    env_file:
+      - ./directus/.env
+
+networks:
+  drcts:
